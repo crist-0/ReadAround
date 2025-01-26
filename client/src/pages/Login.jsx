@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axiosInstance from "../axiosInstance";
-import { useNavigate , Link } from "react-router-dom";
+import { useNavigate , Link, data } from "react-router-dom";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -25,6 +25,8 @@ const Login = () => {
       setMessage(response.data.message);
       setError("");
 
+      localStorage.setItem("user_id", response.data.user.id);
+      
       // Store token in localStorage for future requests
       localStorage.setItem("token", response.data.token);
 

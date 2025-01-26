@@ -14,6 +14,8 @@ import Recommendations from './pages/Recommendations';
 import ResetPassword from './components/ResetPassword'
 import BookPage from './pages/BookPage';
 import BookAdd from './pages/BookAdd';
+import ExploreBooks from './pages/ExploreBooks';
+import BookReviewPage from './pages/BookReviewPage';
 
 
 const App = () => {
@@ -34,7 +36,8 @@ const App = () => {
           <Route path="/reset" element={<ResetPassword />} />
           <Route path="/bookpage" element={ <BookPage />} />
           <Route path="/addbook" element={ <BookAdd />} />
-
+          <Route path="/explore" element={ <ExploreBooks /> } />
+          <Route path="/add-review" element={ <BookReviewPage /> } />
         </Routes>
       </div>
 

@@ -1,6 +1,28 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const BookCard = ({ book }) => {
+  const formattedDate = new Date(book.publication_date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  const navigate = useNavigate();
+
+  const handleWriteNavigation = () => {
+    navigate("/add-review", {
+      state: {
+        book_id: book.id,
+      },
+    });
+  };
+
+  const handleAddToReadingList = () => {
+    // Add logic to handle adding the book to the reading list
+    console.log(`Book with ID ${book.id} added to the reading list.`);
+  };
+
   return (
     <div className="bg-gray-50 dark:bg-gray-900 p-6">
       <div className="max-w-4xl mx-auto bg-gray-800 shadow-lg rounded-lg overflow-hidden transition-shadow duration-300 hover:shadow-xl">
@@ -9,25 +31,22 @@ const BookCard = ({ book }) => {
           <div className="md:w-1/3">
             <img
               src={book.coverImage}
-              alt={`${book.name} cover`}
+              alt={`${book.title} cover`}
               className="w-full h-auto object-cover rounded-t-lg md:rounded-none md:rounded-l-lg"
-              style={{ maxWidth: "240px", maxHeight: "340px" }} // Set max width and height
+              style={{ maxWidth: "240px", maxHeight: "340px" }}
             />
           </div>
 
           {/* Details Section */}
           <div className="p-6 flex-1">
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-              {book.name}
+              {book.title}
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-2">
-              <span className="font-semibold">Author:</span> {book.author}
-            </p>
-            <p className="text-gray-600 dark:text-gray-400 mb-2">
-              <span className="font-semibold">Year:</span> {book.year}
+              <span className="font-semibold">Genre:</span> {book.genre}
             </p>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              <span className="font-semibold">Genre:</span> {book.genre}
+              <span className="font-semibold">Publication Date:</span> {formattedDate}
             </p>
 
             {/* Rating Section */}
@@ -41,7 +60,7 @@ const BookCard = ({ book }) => {
                     key={index}
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
-                    fill={index < book.rating ? "#FFD700" : "#E5E7EB"}
+                    fill={index < book.average_rating ? "#FFD700" : "#E5E7EB"}
                     className="w-5 h-5 transition-transform transform hover:scale-110"
                   >
                     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
@@ -51,12 +70,25 @@ const BookCard = ({ book }) => {
             </div>
 
             {/* Buttons Section */}
-            <div className="flex space-x-4">
-              <button className="flex-1 py-2 px-4 bg-blue-500 dark:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-900 focus:ring-opacity-75">
-                Write Review
-              </button>
-              <button className="flex-1 py-2 px-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-white font-semibold rounded-lg shadow-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 focus:ring-opacity-75">
+            <div className="flex space-x-4 mt-6">
+              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                 Read Reviews
+              </button>
+              <button
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                onClick={handleWriteNavigation}
+              >
+                Write Reviews
+              </button>
+            </div>
+
+            {/* Add to Reading List Button */}
+            <div className="mt-6">
+              <button
+                className="w-full bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                onClick={handleAddToReadingList}
+              >
+                Add to Reading List
               </button>
             </div>
           </div>

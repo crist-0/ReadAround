@@ -23,25 +23,25 @@ const Carousel = ({ books }) => {
   }, [books.length]);
 
   return (
-    <div className="w-full">
+    <div className="w-full ">
       {/* Carousel Title */}
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white text-center mb-6">
         Get Personalised Recommendation
       </h2>
 
-      <div id="default-carousel" className="relative w-full" data-carousel="slide">
+      <div id="default-carousel" className="relative w-full " data-carousel="slide">
         {/* Carousel wrapper */}
         <div className="relative h-96 overflow-hidden rounded-lg bg-transparent">
           {books.map((book, index) => (
             <div
               key={book.name}
-              className={`duration-700 ease-in-out absolute inset-0 ${
+              className={`duration-700 ease-in-out absolute inset-0  ${
                 index === activeIndex ? "opacity-100" : "opacity-0 invisible"
               }`}
               style={{ backgroundColor: "transparent" }} // Make each carousel item transparent
               data-carousel-item
             >
-              <div className="h-full w-full flex items-center justify-center bg-transparent">
+              <div className="h-full w-full flex items-center justify-center bg-gradient-to-bl from-[#0f172a] via-[#1e1a78] to-[#0f172a]">
                 <BookCard
                   book={book}
                   style={{ height: "100%", width: "100%", backgroundColor: "transparent" }}

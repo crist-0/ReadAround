@@ -5,7 +5,32 @@ const Book = require("../models/bookModel");
 
 
 // get a book using specific filters that are passed from the frontend.
-router.post("/get", (req, res) => {
+router.post("/get", async (req, res) => {
+    const { title, author , genre } = req.body;
+    if (genre){
+        const response =  await Book.find({ genre : genre });
+        if(!response)
+        {
+            return res.status(400).json({ message : "Searched genre does not found" })
+        }
+        else
+        {
+            console.log(response);
+            return res.status(200).json({ message : "Success", 
+                data : 
+                    response.map( data => ({
+                        id : data._id,
+                        title : data.title,
+                        genre : data.genre,
+                        cover_image : data.cover_image,
+                        publication_date : data.publication_date,
+                        number_of_reviews: data.number_of_reviews,
+                        average_rating: data.average_rating
+                    }) )
+                
+            })
+        }
+    }
 
 });
 

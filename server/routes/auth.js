@@ -5,6 +5,8 @@ const User = require('../models/userModel'); // Ensure the correct model is used
 const router = express.Router();
 
 const booksRouter = require('./bookRoutes');
+const reviewRouter = require('./reviewRoutes');
+
 
 // JWT Secret
 const SECRET_KEY = process.env.SECRET_KEY || 'your_jwt_secret';
@@ -148,6 +150,8 @@ router.get("/user/details",async (req, res) => {
   }
 })
 
+
+// reset the users password
 router.post("/reset_password",async (req, res) => {
   console.log(req.body);
   const {email, oldPassword, newPassword} = req.body;
@@ -192,7 +196,32 @@ router.post("/reset_password",async (req, res) => {
 
 })
 
+
+// add a book to users saved_list
+router.post("/add/saved",async (req, res) => {
+  const { book_id, user_id } = req.body;
+  // const response = await User.findOne({ _id : user_id });
+  const response = await User.updateOne({ _id : user_id }, {
+    $push: {
+      saved_books: book_id
+    }
+  });
+
+  if (response.modifiedCount > 0)
+    {
+      return res.status(200).json({ message : "Book added to the list successfully"});
+    }
+    else
+    {
+      return res.status(400).json({ message : "Failed to add book" });
+    }
+});
+
+//book routes
 router.use('/books', booksRouter);
 
+
+//review routes
+router.use('/review', reviewRouter);
 
 module.exports = router;
