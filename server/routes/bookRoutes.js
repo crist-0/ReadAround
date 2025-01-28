@@ -17,15 +17,15 @@ router.post("/get", async (req, res) => {
         {
             console.log(response);
             return res.status(200).json({ message : "Success", 
-                data : 
-                    response.map( data => ({
-                        id : data._id,
-                        title : data.title,
-                        genre : data.genre,
-                        cover_image : data.cover_image,
-                        publication_date : data.publication_date,
-                        number_of_reviews: data.number_of_reviews,
-                        average_rating: data.average_rating
+                response : 
+                    response.map( response => ({
+                        id : response._id,
+                        title : response.title,
+                        genre : response.genre,
+                        cover_image : response.cover_image,
+                        publication_date : response.publication_date,
+                        number_of_reviews: response.number_of_reviews,
+                        average_rating: response.average_rating
                     }) )
                 
             })
@@ -35,12 +35,33 @@ router.post("/get", async (req, res) => {
 });
 
 // return a book specified by the id.
-router.get("/:id", (req,res) => {
-
+router.get("/:id",async (req,res) => {
+    const book_id = req.params.id;
+    const response = await Book.findOne({ _id: book_id });
+    if(!response)
+        {
+            return res.status(400).json({ message : "Searched book with id does not found" })
+        }
+        else
+        {
+            console.log(response);
+            return res.status(200).json({ message : "Success", 
+                data : {
+                    id : response._id,
+                    title : response.title,
+                    genre : response.genre,
+                    cover_image : response.cover_image,
+                    publication_date : response.publication_date,
+                    number_of_reviews: response.number_of_reviews,
+                    average_rating: response.average_rating
+                }
+                
+            })
+        }
 });
 
 
-// add a book to the database ( admin only )
+// add a book to the responsebase ( admin only )
 router.post("/add", async (req, res) => {
    const { title , author, genre, description, publication_date, cover_image, imageFile, fileupload } = req.body;
 
@@ -103,7 +124,7 @@ router.put("/:id", (req, res) => {
 
 
 
-// delete a book entirely from the database. ( admin only )
+// delete a book entirely from the responsebase. ( admin only )
 
 router.delete("/:id", (req, res) => {
 

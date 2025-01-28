@@ -39,6 +39,7 @@ router.post("/get" , (req, res) => {
 router.get("/get",async (req, res) => {
     const user_id = req.query.id;
     const book_id  = req.query.bid;
+    console.log(book_id);
     if (user_id)
     {
         console.log("hello");
@@ -56,7 +57,8 @@ router.get("/get",async (req, res) => {
                     review_id: data.id,
                     book_id: data.book_id,
                     rating: data.rating,
-                    comment: data.comment
+                    comment: data.comment,
+                    date: data.updated_at
                 }) )
              })
         }
@@ -65,6 +67,7 @@ router.get("/get",async (req, res) => {
     else if(book_id)
     {
         console.log(book_id);    
+        console.log("hello");
         const response = await Review.find({ book_id : book_id });
     
         if(!response)
@@ -73,9 +76,9 @@ router.get("/get",async (req, res) => {
         }
         else
         {
-            console.log(response);
             return res.status(200).json({ message : "Success",
                 data : response.map( data => ({
+                    user_id: data.user_id,
                     review_id: data.id,
                     book_id: data.book_id,
                     rating: data.rating,

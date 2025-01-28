@@ -140,7 +140,8 @@ router.get("/user/details",async (req, res) => {
         id: user._id,
         username: user.username,
         email: user.email,
-        phone: user.phone
+        phone: user.phone,
+        saved_books: user.saved_books
       },
     });
   } catch (error) {
@@ -201,6 +202,7 @@ router.post("/reset_password",async (req, res) => {
 router.post("/add/saved",async (req, res) => {
   const { book_id, user_id } = req.body;
   // const response = await User.findOne({ _id : user_id });
+  console.log("hiiiiiii"+user_id);
   const response = await User.updateOne({ _id : user_id }, {
     $push: {
       saved_books: book_id

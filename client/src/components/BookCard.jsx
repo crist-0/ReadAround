@@ -1,6 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
+import axios from 'axios';
+
 const BookCard = ({ book }) => {
   const formattedDate = new Date(book.publication_date).toLocaleDateString("en-US", {
     year: "numeric",
@@ -18,10 +20,36 @@ const BookCard = ({ book }) => {
     });
   };
 
-  const handleAddToReadingList = () => {
+  const handleAddToReadingList = async () => {
     // Add logic to handle adding the book to the reading list
     console.log(`Book with ID ${book.id} added to the reading list.`);
+    const user_id = localStorage.getItem("user_id");
+    const data = {
+      book_id: book.id,
+      user_id: user_id
+    }
+
+    try {
+      const response = await axios.post("http://127.0.0.1:7000/api/add/saved", data);
+ 
+      alert(response.data.message);
+
+      // localStorage.setItem("user_id", response.data.user.id);
+      
+    } catch (err) {
+      alert(err.response?.data?.message || "An error occurred");
+      console.error(err);
+    }
   };
+
+  const handleRead = () => {
+    navigate("/view-reviews", {
+      state: {
+        book_id: book.id,
+        book_title: book.title
+      },
+    });
+  }
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 p-6">
@@ -71,7 +99,8 @@ const BookCard = ({ book }) => {
 
             {/* Buttons Section */}
             <div className="flex space-x-4 mt-6">
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              onClick={handleRead}>
                 Read Reviews
               </button>
               <button

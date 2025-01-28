@@ -8,6 +8,7 @@ import Footer from "../components/Footer"
 import Navbar from "../components/Navbar"
 import Carousel from "../components/Carousel"
 import Paragraph from '../components/Paragraph';
+import ReviewCard from '../components/ReviewCard';
 
 const Home = () => {
   useEffect(() => {
@@ -66,6 +67,12 @@ const Home = () => {
       },
   ];
 
+  const exampleReview = {
+    bookTitle: "The Great Gatsby",
+    comment: "A captivating and timeless story of love and ambition.",
+    rating: 5,
+    date: "2025-01-22",
+  }
   
 
   return  <div>
@@ -76,6 +83,7 @@ const Home = () => {
   <Features />
   <Carousel books={books}/>
   <Footer />
+  <ReviewCard review={exampleReview} />
   {/* <Paragraph
   review="This book offers a brilliant insight into the world of AI and its implications on society. A must-read for tech enthusiasts and casual readers alike."
   rating={4}
