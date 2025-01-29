@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useLocation } from 'react-router-dom';
+import { useLocation } from "react-router-dom";
 
 // Import the BookCard component
 import BookCard from "../components/BookCard";
@@ -12,50 +12,81 @@ const UserProfilePage = () => {
   const [bookDetails, setBookDetails] = useState([]);
   const [reviewDetails, setReviewDetails] = useState([]);
   
-  const user = {
-    name: "John Doe",
-    username: "johndoe",
-  };
-
-  // Get the location object which contains the state
   const { state } = useLocation();
   const { user_data } = state;
 
-  // Fetching book details whenever saved_books change
+  const log_id = localStorage.getItem("user_id");
+  
   useEffect(() => {
     const fetchBookDetails = async () => {
       const book_data = user_data.saved_books;
-
       try {
         const bookRequests = book_data.map((bookId) =>
           axios.get(`http://127.0.0.1:7000/api/books/${bookId}`)
         );
-
         const responses = await Promise.all(bookRequests);
         const books = responses.map((response) => response.data.data);
-        setBookDetails(books);  // Update state with the fetched books
+        setBookDetails(books);
       } catch (error) {
-        console.error('Error fetching book details:', error);
+        console.error("Error fetching book details:", error);
       }
     };
 
     const fetchReviewDetails = async () => {
       const user_id = user_data.id;
-
       try {
-        const response = await axios.get(`http://127.0.0.1:7000/api/review/get?id=${user_id}`);
-        setReviewDetails(response.data.data);  // Update state with fetched reviews
+        const response = await axios.get(
+          `http://127.0.0.1:7000/api/review/get?id=${user_id}`
+        );
+        setReviewDetails(response.data.data);
       } catch (error) {
-        console.error('Error fetching review details:', error);
+        console.error("Error fetching review details:", error);
+      }
+    };
+
+    const checkFollowingStatus = async () => {
+      try {
+        const response = await axios.post(
+          "http://127.0.0.1:7000/api/social/follow",
+          {
+            follower: log_id,
+            following: user_data.id,
+          }
+        );
+
+        if (response.data.message === "Already following") {
+          setIsFollowing(true);
+        }
+      } catch (error) {
+        console.error("Error checking follow status:", error);
       }
     };
 
     fetchBookDetails();
     fetchReviewDetails();
-  }, [user_data.saved_books, user_data.id]);
+    checkFollowingStatus();
+  }, [user_data.saved_books, user_data.id, log_id]);
 
-  const handleFollow = () => {
-    setIsFollowing((prevState) => !prevState);
+  const handleFollow = async () => {
+    try {
+      if (!isFollowing) {
+        await axios.post("http://127.0.0.1:7000/api/social/follow", {
+          follower: log_id,
+          following: user_data.id,
+        });
+        setIsFollowing(true);
+      } else {
+        await axios.delete("http://127.0.0.1:7000/api/social/unfollow", {
+          data: {
+            follower: log_id,
+            followed: user_data.id,
+          },
+        });
+        setIsFollowing(false);
+      }
+    } catch (error) {
+      console.error("Error updating follow status:", error);
+    }
   };
 
   const handleRedirect = () => {
@@ -76,7 +107,9 @@ const UserProfilePage = () => {
           <div className="text-center mt-4">
             <button
               onClick={handleFollow}
-              className={`w-32 py-2 rounded-lg text-sm font-medium ${isFollowing ? "bg-gray-500" : "bg-blue-600"} text-white hover:bg-blue-700 focus:outline-none`}
+              className={`w-32 py-2 rounded-lg text-sm font-medium ${
+                isFollowing ? "bg-gray-500" : "bg-blue-600"
+              } text-white hover:bg-blue-700 focus:outline-none`}
             >
               {isFollowing ? "Following" : "Follow"}
             </button>
@@ -84,9 +117,10 @@ const UserProfilePage = () => {
 
           {/* Saved Books Section */}
           <section className="mt-8">
-            <h2 className="text-2xl font-semibold mb-4 text-white">Saved Books</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-white">
+              Saved Books
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-3">
-              {/* Check if there are any saved books */}
               {bookDetails.length ? (
                 bookDetails.map((book) => <BookCard key={book.id} book={book} />)
               ) : (
@@ -97,45 +131,43 @@ const UserProfilePage = () => {
 
           {/* Reviews Section */}
           <section className="mt-8">
-            <h2 className="text-2xl font-semibold mb-4 text-white">Reviews</h2>
-            {reviewDetails.length ? (
-              <div className="space-y-4">
-                {reviewDetails.map((review) => (
-                  <div
-                    key={review.review_id}
-                    className="bg-gray-700 p-4 rounded-lg shadow-md"
-                  >
-                    <h3 className="text-lg font-semibold text-white mb-2">
-                      {review.bookTitle}
-                    </h3>
-                    <div className="flex items-center text-yellow-500 mb-2">
-                      {[...Array(review.rating)].map((_, i) => (
-                        <svg
-                          key={i}
-                          className="w-5 h-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M12 .587l3.668 7.568L24 9.753l-6 5.847 1.415 8.4L12 19.897l-7.415 3.903L6 15.6 0 9.753l8.332-1.598L12 .587z" />
-                        </svg>
-                      ))}
-                    </div>
-                    <p className="text-gray-300">{review.comment}</p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Reviewed on {new Date(review.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400">No reviews yet.</p>
-            )}
-          </section>
+  <h2 className="text-2xl font-semibold mb-4 text-white">Reviews</h2>
+  {reviewDetails.length ? (
+    <div className="space-y-4">
+      {reviewDetails.map((review) => (
+        <div
+          key={review.review_id}
+          className="bg-gray-700 p-4 rounded-lg shadow-md"
+        >
+          <h3 className="text-lg font-semibold text-white mb-2">
+            {review.bookTitle}
+          </h3>
+          
+          {/* Star Rating Display */}
+          <div className="flex items-center mb-2 text-2xl">
+            {Array.from({ length: 5 }, (_, i) => (
+              <span key={i} className={i < review.rating ? "text-yellow-400" : "text-gray-500"}>
+                {i < review.rating ? "★" : "☆"}
+              </span>
+            ))}
+          </div>
+
+          <p className="text-gray-300">{review.comment}</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Reviewed on {new Date(review.date).toLocaleDateString()}
+          </p>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="text-gray-400">No reviews yet.</p>
+  )}
+</section>
+
 
           <button
             onClick={handleRedirect}
-            className="w-full bg-blue-600 text-white font-medium rounded-lg text-sm px-5 py-2.5 mt-8 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            className="w-full bg-blue-600 text-white font-medium rounded-lg text-sm px-5 py-2.5 mt-8 hover:bg-blue-700"
           >
             Go to HomePage
           </button>

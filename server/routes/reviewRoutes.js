@@ -82,7 +82,8 @@ router.get("/get",async (req, res) => {
                     review_id: data.id,
                     book_id: data.book_id,
                     rating: data.rating,
-                    comment: data.comment
+                    comment: data.comment,
+                    date: data.updated_at
                 }) )
              })
         }

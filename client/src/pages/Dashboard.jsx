@@ -240,10 +240,29 @@ const Dashboard = () => {
   ];
 
   const recentReviews = [
-    { id: 1, book: "The Hobbit", review: "An amazing journey through Middle Earth!" },
-    { id: 2, book: "Dune", review: "A masterpiece of science fiction." },
-    { id: 3, book: "The Catcher in the Rye", review: "A deep dive into teenage angst." },
+    { 
+      user_id : "678cb0cf94cac820baf06c4c",
+      username: "BilboBaggins", 
+      comment: "An amazing journey through Middle Earth!", 
+      rating: 5, 
+      date: "2025-01-26T17:30:46.040+00:00" 
+    },
+    { 
+      user_id : "678cb0cf94cac820baf06c4c",
+      username: "MuadDib", 
+      comment: "A masterpiece of science fiction.", 
+      rating: 5, 
+      date: "2025-01-26T17:30:46.040+00:00" 
+    },
+    { 
+      user_id : "678cb0cf94cac820baf06c4c",
+      username: "HoldenCaulfield", 
+      comment: "A deep dive into teenage angst.", 
+      rating: 4, 
+      date: "2025-01-26T17:30:46.040+00:00" 
+    }
   ];
+  
 
   // Calculate reading progress percentage
   const readingProgress = userData.readingGoal
