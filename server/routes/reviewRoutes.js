@@ -2,7 +2,7 @@ const express = require("express");
 
 const router = express.Router();
 const Review = require("../models/reviewModel");
-
+const Comment = require("../models/commentModel");
 
 // add a review to the database..
 router.post("/add",async (req, res) =>
@@ -32,9 +32,9 @@ router.post("/add",async (req, res) =>
 })
 
 // request  reviews from the database 
-router.post("/get" , (req, res) => {
+// router.post("/get" , (req, res) => {
     
-})
+// })
 
 router.get("/get",async (req, res) => {
     const user_id = req.query.id;
@@ -54,6 +54,7 @@ router.get("/get",async (req, res) => {
         {
             return res.status(200).json({ message : "Success",
                 data : response.map( data => ({
+                    user_id: data.user_id,
                     review_id: data.id,
                     book_id: data.book_id,
                     rating: data.rating,
@@ -90,4 +91,127 @@ router.get("/get",async (req, res) => {
     }
 })
 
+
+// adding new reviews to the database
+router.post("/:reviewid/comments" ,async (req, res) => {
+    const review_id = req.params.reviewid;
+    const { user_id, content } = req.body;
+    console.log("Parameters ="+req.params.reviewid);
+    console.log("review_id = "+review_id+" user_id = "+user_id+" content = "+content);
+    try
+    {
+        const newComment = new Comment({
+            user_id: user_id,
+            review_id: review_id,
+            content: content
+        })
+    
+        await newComment.save();
+        
+        res.status(201).json({
+            messsage : "new comment added"
+        })
+    }
+    catch(error)
+    {
+        console.error("Error while adding new comment : ",error);
+        res.status(500).json({ message : "server error",error });
+    }
+})
+
+//fetch comments from backend
+router.get("/:reviewid/comments",async (req, res) => {
+    try{
+
+        const review_id = req.params.reviewid;
+
+        const response = await Comment.find({
+            review_id: review_id
+        });
+
+        if(!response){
+            return res.status(400).json({
+                message: "Comments not found"
+            })
+        }
+        else{
+            return res.status(200).json({
+                message: "Success",
+                data: response.map(  data => ({
+                    comment: data.content,
+                    user_id: data.user_id
+                }))
+            })
+        }
+
+    }
+    catch(error){
+
+    }
+})
+
+
+
+//delete a review
+
+router.delete("/:review_id",async (req,res) =>{
+    const review_id = req.params.review_id;
+    try{
+        const response = await Review.deleteOne({
+            _id: review_id
+        })
+
+        if(response.deletedCount > 0)
+        {
+            res.status(200).json({
+                message: "review deleted sucessfully"
+            });
+        }
+        else
+        {
+            res.status(500).json({
+                message: "Could not delete the review"
+            })
+        }
+    }
+    catch(error)
+    {
+        console.error("Error while deleting : ",error);
+        res.status(500).json({
+            message: "server error", error
+        });
+    }
+
+})
+
+
+// delete a comment
+router.delete("/:commentId/comment",async (req, res) => {
+    try{
+        const comment_id = req.params.commentId;
+
+        const response = await Comment.deleteOne({
+            _id: comment_id
+        })
+        if(response.deletedCount > 0)
+            {
+                res.status(200).json({
+                    message: "comment deleted sucessfully"
+                });
+            }
+        else
+            {
+                res.status(500).json({
+                    message: "Could not delete the comment"
+                });
+            }
+    }
+    catch(error){
+        console.error("Error while deleting : ",error);
+        res.status(500).json({
+            message: "server error", error
+        });
+    }
+
+})
 module.exports = router;

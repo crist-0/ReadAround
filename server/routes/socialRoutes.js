@@ -43,8 +43,8 @@ router.post("/follow", async (req, res) => {
 
 router.delete( "/unfollow", async (req,res) =>
 {
-    const follower = req.query.fr;
-    const followed = req.query.fd;
+    const follower = req.body.follower;
+    const followed = req.body.followed;
 
     console.log("follower_id="+follower+"  followed_id="+followed);
     try{

@@ -56,14 +56,15 @@ const BookCard = ({ book }) => {
       <div className="max-w-4xl mx-auto bg-gray-800 shadow-lg rounded-lg overflow-hidden transition-shadow duration-300 hover:shadow-xl">
         <div className="flex flex-col md:flex-row">
           {/* Image Section */}
-          <div className="md:w-1/3">
+          <div className="md:w-1/3 flex justify-center">
             <img
-              src={book.coverImage}
+              src={book.cover_image}
               alt={`${book.title} cover`}
-              className="w-full h-auto object-cover rounded-t-lg md:rounded-none md:rounded-l-lg"
-              style={{ maxWidth: "240px", maxHeight: "340px" }}
+              className="w-full md:w-auto h-auto object-cover rounded-t-lg md:rounded-none md:rounded-l-lg"
+              style={{ width: "100%", maxWidth: "240px", aspectRatio: "2/3" }}
             />
           </div>
+
 
           {/* Details Section */}
           <div className="p-6 flex-1">
