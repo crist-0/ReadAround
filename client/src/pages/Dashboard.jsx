@@ -195,7 +195,17 @@ const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [savedBooks, setSavedBooks] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [followers, setFollowers] = useState([]);
+  const [following, setFollowing] = useState([]);
+  const [showPopup, setShowPopup] = useState(null);
   const user_id = localStorage.getItem("user_id");
+
+  const [editingReviewId, setEditingReviewId] = useState(null);
+  const [editedText, setEditedText] = useState("");
+  const [editedRating, setEditedRating] = useState(0);
+
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendedBooks, setRecommendedBooks] = useState([]);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -207,6 +217,8 @@ const Dashboard = () => {
         console.error("Failed to fetch user details.", error);
       }
     };
+
+
 
     fetchUserData();
   }, [user_id]);
@@ -225,45 +237,184 @@ const Dashboard = () => {
         }
       };
       fetchSavedBooks();
+      fetchRecommendations();
     }
   }, [dashboardData]);
 
+  //fetching reviews
+  const fetchReviews = async () => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:7000/api/review/get?id=${user_id}`);
+      setReviews(response.data.data);
+    } catch (error) {
+      console.error("Failed to fetch reviews.", error);
+    }
+  };
+
+  const fetchRecommendations = async () => {
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/recs/", {
+        books: dashboardData.saved_books,
+      });
+      setRecommendations(response.data);
+      const bookRequests = Object.values(response.data.book_id).map((bookId) =>
+        axios.get(`http://127.0.0.1:7000/api/books/${bookId}`)
+      );
+      const bookResponses = await Promise.all(bookRequests);
+      const books = bookResponses.map((response) => response.data.data);
+      setRecommendedBooks(books);
+    } catch (error) {
+      console.error("Error fetching recommendations:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const response = await axios.get(`http://127.0.0.1:7000/api/review/get?id=${user_id}`);
-        setReviews(response.data.data);
-      } catch (error) {
-        console.error("Failed to fetch reviews.", error);
-      }
-    };
+
 
     fetchReviews();
   }, [user_id]);
+
+  useEffect(() => {
+    const fetchSocialData = async () => {
+      try {
+        const [followersRes, followingRes] = await Promise.all([
+          axios.get(`http://127.0.0.1:7000/api/social/${user_id}/followers`),
+          axios.get(`http://127.0.0.1:7000/api/social/${user_id}/following`),
+        ]);
+
+        const followerIds = followersRes.data.data.map(item => item.follower);
+        const followingIds = followingRes.data.data.map(item => item.following);
+
+        const userPromises = [...followerIds, ...followingIds].map(id =>
+          axios.get(`http://127.0.0.1:7000/api/user/details?id=${id}`)
+        );
+        const users = await Promise.all(userPromises);
+        
+        const userMap = users.reduce((acc, res) => {
+          acc[res.data.user.id] = res.data.user.username;
+          return acc;
+        }, {});
+
+        setFollowers(followerIds.map(id => ({ id, username: userMap[id] })));
+        setFollowing(followingIds.map(id => ({ id, username: userMap[id] })));
+      } catch (error) {
+        console.error("Failed to fetch social data.", error);
+      }
+    };
+    fetchSocialData();
+  }, [user_id]);
+
+  const handleFollowToggle = async (targetUserId, isFollowing) => {
+    try {
+
+      const action = isFollowing ? "unfollow" : "follow";
+
+      isFollowing ? (
+        await axios.delete(`http://127.0.0.1:7000/api/social/unfollow`, {
+         data: { 
+          follower: user_id,
+          followed: targetUserId
+         }
+        })
+      )
+      : (
+        await axios.post(`http://127.0.0.1:7000/api/social/follow`, {
+         follower: user_id,
+        followed_id: targetUserId,
+        })
+      )
+
+      setFollowing((prev) =>
+        isFollowing ? prev.filter((user) => user.id !== targetUserId) : [...prev, { id: targetUserId, username: "" }]
+      );
+    } catch (error) {
+      console.error("Error toggling follow state", error);
+    }
+  };
+
+  // editing the review
+  const handleEditClick = (review) => {
+    setEditingReviewId(review.review_id);
+    setEditedText(review.text); // Assuming review has a `text` field
+    setEditedRating(review.rating);
+  };
+
+  // saving the edited review
+const handleSaveClick = async (reviewId) => {
+    try {
+      const response = await axios.put(`http://127.0.0.1:7000/api/review/${reviewId}`, {
+        text: editedText,
+        rating: editedRating,
+      });
+
+      if (response.status === 200) {
+        setReviews((prevReviews) =>
+          prevReviews.map((review) =>
+            review.review_id === reviewId
+              ? { ...review, text: editedText, rating: editedRating }
+              : review
+          )
+        );
+        setEditingReviewId(null);
+        fetchReviews();
+      }
+    } catch (error) {
+      console.error("Error updating review:", error.response?.data || error.message);
+    }
+  };
 
   if (!dashboardData) {
     return <div className="text-center text-gray-500 mt-10">Loading user data...</div>;
   }
 
-  const readingProgress = dashboardData.readingGoal
-    ? Math.round((dashboardData.booksReadThisYear / dashboardData.readingGoal) * 100)
-    : 0;
+
+
 
   return (
     <section className="bg-gray-900 min-h-screen p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="bg-gray-800 rounded-lg p-6 mb-6 shadow-lg border border-gray-700">
           <h1 className="text-2xl font-bold text-white mb-4">Welcome back, {dashboardData.username || "User"}!</h1>
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-white mb-2">Reading Goal Progress</h2>
-            <div className="w-full bg-gray-700 rounded-full h-4">
-              <div className="bg-blue-600 rounded-full h-4 transition-all duration-500" style={{ width: `${Math.min(readingProgress, 100)}%` }}></div>
-            </div>
-            <p className="text-gray-400 mt-2">
-              {dashboardData.booksReadThisYear || 0} of {dashboardData.readingGoal || 0} books read this year ({readingProgress}%)
-            </p>
+          <div className="flex justify-between text-white">
+            <button onClick={() => setShowPopup("followers")}>
+              Followers: {followers.length}
+            </button>
+            <button onClick={() => setShowPopup("following")}>
+              Following: {following.length}
+            </button>
           </div>
         </div>
+
+        {showPopup && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+            <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-80 max-w-md">
+              <h2 className="text-xl text-white mb-4 text-center">
+                {showPopup === "followers" ? "Followers" : "Following"}
+              </h2>
+              <ul className="space-y-3 max-h-60 overflow-y-auto">
+                {(showPopup === "followers" ? followers : following).map((user) => (
+                  <li key={user.id} className="flex justify-between items-center text-white bg-gray-700 p-2 rounded-lg">
+                    <span className="text-base">{user.username}</span>
+                    {showPopup === "following" && (
+                      <button
+                        onClick={() => handleFollowToggle(user.id, true)}
+                        className="bg-red-500 hover:bg-red-600 text-white text-base px-3 py-1 rounded-lg"
+                      >
+                        Unfollow
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <button 
+                onClick={() => setShowPopup(null)} 
+                className="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-white mb-4">Saved Books</h2>
@@ -276,16 +427,84 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Your Reviews</h2>
-          <div className="space-y-4">
-            {reviews.length > 0 ? (
-              reviews.map((review) => <ReviewCard key={review.review_id} review={review} />)
-            ) : (
-              <p className="text-gray-400">No reviews yet.</p>
-            )}
-          </div>
-        </div>
+     {/* Recommendations Section */}
+     <section className="mt-8">
+            <h2 className="text-2xl font-semibold mb-4 text-white">Recommended Books</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-3">
+              {recommendedBooks.length ? (
+                recommendedBooks.map((book) => (
+                  <BookCard key={book.id} book={book} />
+                ))
+              ) : (
+                <p className="text-gray-400">No recommendations available.</p>
+              )}
+            </div>
+          </section>
+
+    <div className="mb-6">
+      <h2 className="text-xl font-semibold text-white mb-4">Your Reviews</h2>
+      <div className="space-y-4">
+        {reviews.length > 0 ? (
+          reviews.map((review) => (
+            <div key={review.review_id} className="border p-4 rounded-lg bg-gray-800">
+              {editingReviewId === review.review_id ? (
+                <div>
+                  {/* Editable Textarea for Review */}
+                  <textarea
+                    className="w-full p-2 bg-gray-700 text-white rounded"
+                    value={editedText}
+                    onChange={(e) => setEditedText(e.target.value)}
+                  />
+                  
+                  {/* Editable Rating Input */}
+                  <div className="mt-2">
+                    <label className="text-white mr-2">Rating:</label>
+                    <select
+                      className="bg-gray-700 text-white p-1 rounded"
+                      value={editedRating}
+                      onChange={(e) => setEditedRating(Number(e.target.value))}
+                    >
+                      {[1, 2, 3, 4, 5].map((num) => (
+                        <option key={num} value={num}>
+                          {num} ⭐
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Save & Cancel Buttons */}
+                  <button
+                    className="bg-blue-500 text-white px-3 py-1 rounded mt-2"
+                    onClick={() => handleSaveClick(review.review_id)}
+                  >
+                    Save
+                  </button>
+                  <button
+                    className="bg-gray-500 text-white px-3 py-1 rounded mt-2 ml-2"
+                    onClick={() => setEditingReviewId(null)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <div>
+                  <ReviewCard review={review} />
+                  <button
+                    className="text-blue-400 hover:underline mt-2"
+                    onClick={() => handleEditClick(review)}
+                  >
+                    Edit
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
+        ) : (
+          <p className="text-gray-400">No reviews yet.</p>
+        )}
+      </div>
+    </div>
+     
       </div>
     </section>
   );

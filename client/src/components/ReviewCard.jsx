@@ -120,7 +120,8 @@ const ReviewCard = ({ review }) => {
         <div className="flex items-center space-x-1">{renderStars(review.rating)}</div>
         <div className="flex items-center space-x-2">
           <Calendar className="text-gray-400 w-5 h-5" />
-          <span className="text-gray-400 text-sm">{format(new Date(review.date), "yyyy-MM-dd HH:mm")}</span>
+          {console.log(review)}
+          <span className="text-gray-400 text-sm">{format(new Date(review.date || review.updated_at), "yyyy-MM-dd HH:mm")}</span>
         </div>
       </div>
 

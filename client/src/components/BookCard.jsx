@@ -1,9 +1,32 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import axios from 'axios';
 
 const BookCard = ({ book }) => {
+
+    const [bookCover, setBookCover] = useState();
+
+    const q = `?book_title=${book.title}s&author_name=${book.author}`;
+    const formattedQuery = q.replace(/(\w)([A-Z])/g, '$1+$2').toLowerCase();
+
+
+    const fetchCover = async () => {
+      try{
+        const response = await axios.get("https://bookcover.longitood.com/bookcover"+formattedQuery);
+        setBookCover(response.data.url);
+      }
+      catch(error)
+      {
+        console.log("error during fetching book cover ",error);
+      }
+    }
+
+    useEffect(
+        () => {
+          fetchCover();
+        }
+    ,[])
   const formattedDate = new Date(book.publication_date).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -58,7 +81,7 @@ const BookCard = ({ book }) => {
           {/* Image Section */}
           <div className="md:w-1/3 flex justify-center">
             <img
-              src={book.cover_image}
+              src={bookCover}
               alt={`${book.title} cover`}
               className="w-full md:w-auto h-auto object-cover rounded-t-lg md:rounded-none md:rounded-l-lg"
               style={{ width: "100%", maxWidth: "240px", aspectRatio: "2/3" }}
@@ -76,6 +99,9 @@ const BookCard = ({ book }) => {
             </p>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               <span className="font-semibold">Publication Date:</span> {formattedDate}
+            </p>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <span className="font-semibold">Author:</span> {book.author}
             </p>
 
             {/* Rating Section */}

@@ -13,6 +13,8 @@ const userSchema = new mongoose.Schema({
   favorite_books: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Book' }],
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now }
+},{ 
+  id: true 
 });
 
 module.exports = mongoose.model('User', userSchema);

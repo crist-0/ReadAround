@@ -16,6 +16,12 @@ const UserProfilePage = () => {
   const { user_data } = state;
 
   const log_id = localStorage.getItem("user_id");
+
+  useEffect(() => {
+    if (log_id === user_data.id) {
+      navigate("/dashboard");
+    }
+  }, [log_id, user_data.id, navigate]);
   
   useEffect(() => {
     const fetchBookDetails = async () => {
@@ -93,7 +99,12 @@ const UserProfilePage = () => {
     navigate("/");
   };
 
+  const redirectDashboard = () => {
+    navigate("/dashboard");
+  }
+
   return (
+    
     <section className="bg-gray-900 min-h-screen flex flex-col items-center justify-center">
       <div className="w-full max-w-4xl rounded-lg shadow border bg-gray-800 border-gray-700">
         <div className="p-6 space-y-6 sm:p-8">

@@ -39,7 +39,7 @@ router.post("/add",async (req, res) =>
 router.get("/get",async (req, res) => {
     const user_id = req.query.id;
     const book_id  = req.query.bid;
-    console.log(book_id);
+    console.log("testtt ----------------------",book_id);
     if (user_id)
     {
         console.log("hello");
@@ -118,6 +118,41 @@ router.post("/:reviewid/comments" ,async (req, res) => {
         res.status(500).json({ message : "server error",error });
     }
 })
+
+router.put("/:reviewId",async (req, res) => {
+    const {text, rating} = req.body;
+    const review_id = req.params.reviewId;
+    try
+    {
+        const response = await Review.updateOne({
+            _id: review_id
+        },
+        {
+            comment: text,
+            rating: rating,
+            updated_at: Date.now()
+        });
+
+        if(response.modifiedCount > 0){
+            res.status(200).json({
+                message: "review updated successfully"
+            })
+        }
+        else
+        {
+            res.status(404).json({
+                message: "Review not found"
+            })
+        }
+    }
+    catch(error)
+    {
+        console.error("Error while updating the review : ",error);
+        res.status(500).json({ message : "server error",error });
+
+    }
+});
+
 
 //fetch comments from backend
 router.get("/:reviewid/comments",async (req, res) => {

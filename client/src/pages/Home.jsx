@@ -1,7 +1,5 @@
 import React, { useEffect } from 'react';
 import axios from 'axios';
-import backgroundImage from '../assets/img1.jpg'
-import Header from '../components/Header'
 import Hero from "../components/Hero"
 import Features from "../components/Features"
 import Footer from "../components/Footer"
@@ -9,8 +7,12 @@ import Navbar from "../components/Navbar"
 import Carousel from "../components/Carousel"
 import Paragraph from '../components/Paragraph';
 import ReviewCard from '../components/ReviewCard';
+import FeedPage from './FeedPage';
 
 const Home = () => {
+
+  const isLoggedIn = !!localStorage.getItem('token');
+
   useEffect(() => {
     const checkServer = async () => {
       try {
@@ -76,20 +78,23 @@ const Home = () => {
   
 
   return  <div>
-  <div className="bg-gradient-to-bl from-[#0f172a] via-[#1e1a78] to-[#0f172a]">
+    { isLoggedIn ? <FeedPage /> : (
+
+      <div className="bg-gradient-to-bl from-[#0f172a] via-[#1e1a78] to-[#0f172a]">
   {/* <Header></Header> */}
   <Navbar />
   <Hero></Hero>
   <Features />
-  <Carousel books={books}/>
+  {/* <Carousel books={books}/> */}
   <Footer />
   <ReviewCard review={exampleReview} />
   {/* <Paragraph
   review="This book offers a brilliant insight into the world of AI and its implications on society. A must-read for tech enthusiasts and casual readers alike."
   rating={4}
- /> */}
+  /> */}
 
   </div>
+  ) }
   {/* <div className="bg-gradient-to-bl from-[#0f172a] via-[#1e1a78] to-[#0f172a]">hdh</div> */}
 </div>
 };

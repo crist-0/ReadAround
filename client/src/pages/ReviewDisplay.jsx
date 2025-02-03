@@ -82,6 +82,7 @@ const ReviewDisplay = () => {
     const fetchReviews = async () => {
       try {
         const response = await axios.get(`http://127.0.0.1:7000/api/review/get?bid=${book_id}`);
+        console.log(response.data);
         setReviews(response.data.data || []);
       } catch (err) {
         setError("Failed to load reviews. Please try again later.");
@@ -91,7 +92,7 @@ const ReviewDisplay = () => {
     };
 
     fetchReviews();
-  }, [book_id]); // ✅ Added `book_id` as a dependency
+  }, []); // ✅ Added `book_id` as a dependency
 
   // Debugging: Log reviews when they change
   useEffect(() => {
@@ -99,6 +100,7 @@ const ReviewDisplay = () => {
   }, [reviews]);
 
   if (loading) {
+    console.log("Book Details:", book_title, book_id);
     return <div className="text-center text-gray-500 mt-10">Loading reviews...</div>;
   }
 

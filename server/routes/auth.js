@@ -7,7 +7,7 @@ const router = express.Router();
 const booksRouter = require('./bookRoutes');
 const reviewRouter = require('./reviewRoutes');
 const socialRouter = require('./socialRoutes');
-
+const feedRouter = require("./feedRoutes");
 // JWT Secret
 const SECRET_KEY = process.env.SECRET_KEY || 'your_jwt_secret';
 
@@ -230,5 +230,7 @@ router.use('/review', reviewRouter);
 //social connection routes
 
 router.use('/social', socialRouter);
+
+router.use('/feed',feedRouter);
 
 module.exports = router;

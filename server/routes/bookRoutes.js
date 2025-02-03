@@ -25,7 +25,8 @@ router.post("/get", async (req, res) => {
                         cover_image : response.cover_image,
                         publication_date : response.publication_date,
                         number_of_reviews: response.number_of_reviews,
-                        average_rating: response.average_rating
+                        average_rating: response.average_rating,
+                        author: response.author
                     }) )
                 
             })
@@ -53,7 +54,9 @@ router.get("/:id",async (req,res) => {
                     cover_image : response.cover_image,
                     publication_date : response.publication_date,
                     number_of_reviews: response.number_of_reviews,
-                    average_rating: response.average_rating
+                    average_rating: response.average_rating,
+                    author: response.author
+
                 }
                 
             })

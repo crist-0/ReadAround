@@ -11,6 +11,7 @@ router.post("/follow", async (req, res) => {
     const { follower, following } = req.body;
 
     try{
+
         const isFollowing = await Social.findOne({
             follower_id: follower,
             followed_id: following
@@ -46,7 +47,7 @@ router.delete( "/unfollow", async (req,res) =>
     const follower = req.body.follower;
     const followed = req.body.followed;
 
-    console.log("follower_id="+follower+"  followed_id="+followed);
+    // console.log("follower_id="+follower+"  followed_id="+followed);
     try{
         const response = await Social.deleteOne({
             follower_id: follower,
@@ -94,6 +95,53 @@ router.get('/followers/:fd',async (req, res) => {
             }
     }
 );
+
+//returns a following list
+
+router.get("/:userId/following",async (req, res) => {
+    const user_id = req.params.userId;
+
+    try
+    {
+        const response = await Social.find({
+            follower_id: user_id
+        })
+
+        res.status(200).json({
+            data: response.map( data => ({
+                    following: data.followed_id
+            }) )
+        })
+    }
+    catch(error)
+    {
+        console.error("Error while fetching data : ",error);
+        res.status(500).json({ message : "server error",error });
+    }
+})
+
+
+// returns a followers list
+
+router.get("/:userId/followers",async (req, res) => {
+    const user_id = req.params.userId;
+    try
+    {
+        const response = await Social.find({
+            followed_id: user_id
+        })
+
+        res.status(200).json({
+            data: response.map( data => ({
+                follower: data.follower_id
+            }) )
+        })
+    }
+    catch(error)
+    {
+
+    }
+})
 
 
 module.exports = router;

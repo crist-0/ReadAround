@@ -18,7 +18,7 @@ import ExploreBooks from './pages/ExploreBooks';
 import BookReviewPage from './pages/BookReviewPage';
 import ReviewDisplay from './pages/ReviewDisplay';
 import UserProfilePage from './pages/UserProfilePage';
-
+import FeedPage from './pages/FeedPage';
 
 const App = () => {
   return (
@@ -42,6 +42,7 @@ const App = () => {
           <Route path="/add-review" element={ <BookReviewPage /> } />
           <Route path="/view-reviews" element={ <ReviewDisplay /> } />
           <Route path="/view-user" element={ <UserProfilePage /> } />
+          <Route path="/feed" element={<FeedPage />} />
         </Routes>
       </div>
 
