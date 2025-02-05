@@ -87,7 +87,6 @@ const Home = () => {
   <Features />
   {/* <Carousel books={books}/> */}
   <Footer />
-  <ReviewCard review={exampleReview} />
   {/* <Paragraph
   review="This book offers a brilliant insight into the world of AI and its implications on society. A must-read for tech enthusiasts and casual readers alike."
   rating={4}

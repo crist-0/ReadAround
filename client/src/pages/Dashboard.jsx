@@ -207,6 +207,8 @@ const Dashboard = () => {
   const [recommendations, setRecommendations] = useState([]);
   const [recommendedBooks, setRecommendedBooks] = useState([]);
 
+  const log_id = localStorage.getItem("user_id");
+
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -363,6 +365,44 @@ const handleSaveClick = async (reviewId) => {
     }
   };
 
+// delete a review
+const handleDeleteClick = async (reviewId) => {
+  if (window.confirm("Are you sure you want to delete this review?")) {
+    try {
+      // API call to delete the review
+      await axios.delete(`http://localhost:7000/api/review/${reviewId}`);
+      
+      // Remove the review from the reviews state
+      setReviews((prevReviews) => prevReviews.filter((review) => review.review_id !== reviewId));
+      
+      alert("Review deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      alert("Failed to delete the review. Please try again.");
+    }
+  }
+};
+
+// delete a book from the saved list
+const handleDeleteBook = async (bookId) => {
+  if (window.confirm("Are you sure you want to remove this book from your saved list?")) {
+    try {
+      // API call to delete the book
+      await axios.delete("http://localhost:7000/api/delete/saved", {
+        data: { book_id : bookId, user_id: log_id }, // Sending bookId in the request body
+      });
+
+      // Update the state to remove the deleted book from the savedBooks list
+      setSavedBooks((prevBooks) => prevBooks.filter((book) => book.id !== bookId));
+
+      alert("Book removed successfully!");
+    } catch (error) {
+      console.error("Error deleting book:", error);
+      alert("Failed to remove the book. Please try again.");
+    }
+  }
+};
+
   if (!dashboardData) {
     return <div className="text-center text-gray-500 mt-10">Loading user data...</div>;
   }
@@ -416,16 +456,26 @@ const handleSaveClick = async (reviewId) => {
           </div>
         )}
 
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Saved Books</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
-            {savedBooks.length > 0 ? (
-              savedBooks.map((book) => <BookCard key={book.id} book={book} />)
-            ) : (
-              <p className="text-gray-400">No saved books yet.</p>
-            )}
-          </div>
+    <div className="mb-6">
+        <h2 className="text-xl font-semibold text-white mb-4">Saved Books</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4">
+          {savedBooks.length > 0 ? (
+            savedBooks.map((book) => (
+              <div key={book.id} className="border p-4 rounded-lg bg-gray-800">
+                <BookCard book={book} />
+                <button
+                  className="mt-3 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-all duration-200 ease-in-out"
+                  onClick={() => handleDeleteBook(book.id)}
+                  >
+                  Delete Book
+              </button>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-400">No saved books yet.</p>
+          )}
         </div>
+      </div>
 
      {/* Recommendations Section */}
      <section className="mt-8">
@@ -441,69 +491,78 @@ const handleSaveClick = async (reviewId) => {
             </div>
           </section>
 
-    <div className="mb-6">
-      <h2 className="text-xl font-semibold text-white mb-4">Your Reviews</h2>
-      <div className="space-y-4">
-        {reviews.length > 0 ? (
-          reviews.map((review) => (
-            <div key={review.review_id} className="border p-4 rounded-lg bg-gray-800">
-              {editingReviewId === review.review_id ? (
-                <div>
-                  {/* Editable Textarea for Review */}
-                  <textarea
-                    className="w-full p-2 bg-gray-700 text-white rounded"
-                    value={editedText}
-                    onChange={(e) => setEditedText(e.target.value)}
-                  />
-                  
-                  {/* Editable Rating Input */}
-                  <div className="mt-2">
-                    <label className="text-white mr-2">Rating:</label>
-                    <select
-                      className="bg-gray-700 text-white p-1 rounded"
-                      value={editedRating}
-                      onChange={(e) => setEditedRating(Number(e.target.value))}
-                    >
-                      {[1, 2, 3, 4, 5].map((num) => (
-                        <option key={num} value={num}>
-                          {num} ⭐
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+          <div className="mb-6">
+  <h2 className="text-xl font-semibold text-white mb-4">Your Reviews</h2>
+  <div className="space-y-4">
+    {reviews.length > 0 ? (
+      reviews.map((review) => (
+        <div key={review.review_id} className="border p-4 rounded-lg bg-gray-800">
+          {editingReviewId === review.review_id ? (
+            <div>
+              {/* Editable Textarea for Review */}
+              <textarea
+                className="w-full p-2 bg-gray-700 text-white rounded"
+                value={editedText}
+                onChange={(e) => setEditedText(e.target.value)}
+              />
+              
+              {/* Editable Rating Input */}
+              <div className="mt-2">
+                <label className="text-white mr-2">Rating:</label>
+                <select
+                  className="bg-gray-700 text-white p-1 rounded"
+                  value={editedRating}
+                  onChange={(e) => setEditedRating(Number(e.target.value))}
+                >
+                  {[1, 2, 3, 4, 5].map((num) => (
+                    <option key={num} value={num}>
+                      {num} ⭐
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                  {/* Save & Cancel Buttons */}
-                  <button
-                    className="bg-blue-500 text-white px-3 py-1 rounded mt-2"
-                    onClick={() => handleSaveClick(review.review_id)}
-                  >
-                    Save
-                  </button>
-                  <button
-                    className="bg-gray-500 text-white px-3 py-1 rounded mt-2 ml-2"
-                    onClick={() => setEditingReviewId(null)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <ReviewCard review={review} />
-                  <button
-                    className="text-blue-400 hover:underline mt-2"
-                    onClick={() => handleEditClick(review)}
-                  >
-                    Edit
-                  </button>
-                </div>
-              )}
+              {/* Save & Cancel Buttons */}
+              <button
+                className="bg-blue-500 text-white px-3 py-1 rounded mt-2"
+                onClick={() => handleSaveClick(review.review_id)}
+              >
+                Save
+              </button>
+              <button
+                className="bg-gray-500 text-white px-3 py-1 rounded mt-2 ml-2"
+                onClick={() => setEditingReviewId(null)}
+              >
+                Cancel
+              </button>
             </div>
-          ))
-        ) : (
-          <p className="text-gray-400">No reviews yet.</p>
-        )}
-      </div>
-    </div>
+          ) : (
+            <div>
+              <ReviewCard review={review} />
+              <div className="mt-2">
+                <button
+                  className="text-blue-400 hover:underline mr-4"
+                  onClick={() => handleEditClick(review)}
+                >
+                  Edit
+                </button>
+                <button
+                  className="text-red-400 hover:underline"
+                  onClick={() => handleDeleteClick(review.review_id)}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      ))
+    ) : (
+      <p className="text-gray-400">No reviews yet.</p>
+    )}
+  </div>
+</div>
+
      
       </div>
     </section>

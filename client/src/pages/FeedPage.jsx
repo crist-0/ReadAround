@@ -4,8 +4,10 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import BookCard from "../components/BookCard";
 import ReviewCard from "../components/ReviewCard";
 import Navbar from "../components/Navbar";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const API_URL = "http://localhost:7000/api/feed";
+
 
 const FeedPage = () => {
   const [books, setBooks] = useState([]);
@@ -16,6 +18,9 @@ const FeedPage = () => {
   const [hasMoreReviews, setHasMoreReviews] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  
+  const navigate = useNavigate();
 
   // Fetch books
   const fetchBooks = async () => {
@@ -31,6 +36,10 @@ const FeedPage = () => {
       setError("Failed to load books");
     }
   };
+
+  const handleRedirect = () => {
+    navigate("/explore")
+  }
 
   // Fetch reviews
   const fetchReviews = async () => {
@@ -71,11 +80,16 @@ const FeedPage = () => {
     <div className="p-5 bg-gray-900 min-h-screen text-white">
       <Navbar />
       <h1 className="text-3xl font-bold text-center mb-5">Book Feed</h1>
+      <div className="flex flex-col items-center pb-3">
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button className="text-xl text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center"
+                onClick={handleRedirect}>
+                  Explore by genre
+        </button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         {/* Books Section */}
-        <div>
-          <h2 className="text-xl font-semibold mb-3">Books</h2>
+          <h2 className="text-xl font-semibold mb-3 text-center">Books</h2>
           <InfiniteScroll
             dataLength={books.length}
             next={fetchBooks}
@@ -85,13 +99,13 @@ const FeedPage = () => {
           >
             {console.log(books)}
             {books.map((book) => (
-              <BookCard key={book._id} book={book} />
+              <BookCard key={book.id} book={book} />
             ))}
           </InfiniteScroll>
-        </div>
+
 
         {/* Reviews Section */}
-        <div>
+        {/* <div>
           <h2 className="text-xl font-semibold mb-3">Reviews</h2>
           <InfiniteScroll
             dataLength={reviews.length}
@@ -104,7 +118,7 @@ const FeedPage = () => {
               <ReviewCard key={review._id} review={review} />
             ))}
           </InfiniteScroll>
-        </div>
+        </div> */}
       </div>
     </div>
   );

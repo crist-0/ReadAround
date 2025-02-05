@@ -47,8 +47,9 @@ const BookCard = ({ book }) => {
     // Add logic to handle adding the book to the reading list
     console.log(`Book with ID ${book.id} added to the reading list.`);
     const user_id = localStorage.getItem("user_id");
+    console.log(book);
     const data = {
-      book_id: book.id,
+      book_id: book.id || book._id,
       user_id: user_id
     }
 
@@ -81,7 +82,7 @@ const BookCard = ({ book }) => {
           {/* Image Section */}
           <div className="md:w-1/3 flex justify-center">
             <img
-              src={bookCover}
+              src={bookCover || book.cover_image}
               alt={`${book.title} cover`}
               className="w-full md:w-auto h-auto object-cover rounded-t-lg md:rounded-none md:rounded-l-lg"
               style={{ width: "100%", maxWidth: "240px", aspectRatio: "2/3" }}

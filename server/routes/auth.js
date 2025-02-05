@@ -201,8 +201,20 @@ router.post("/reset_password",async (req, res) => {
 // add a book to users saved_list
 router.post("/add/saved",async (req, res) => {
   const { book_id, user_id } = req.body;
+
+  // const resp = await User.find({user_id: user_id, saved_books: {
+  //   $in: [book_id]
+  // }});
+
+  const ifExist = await User.findOne({ _id: user_id , saved_books: { $in: [book_id] } });
+
+  console.log("response = ",ifExist);
+  if (ifExist)
+  {
+    return res.status(400).json({ message : "book already exist in the list" });
+  }
   // const response = await User.findOne({ _id : user_id });
-  console.log("hiiiiiii"+user_id);
+  console.log("hiiiiiii"+book_id);
   const response = await User.updateOne({ _id : user_id }, {
     $push: {
       saved_books: book_id
@@ -216,6 +228,27 @@ router.post("/add/saved",async (req, res) => {
     else
     {
       return res.status(400).json({ message : "Failed to add book" });
+    }
+});
+
+// delete a book from the user's saved_list
+router.delete("/delete/saved",async (req, res) => {
+  const { book_id, user_id } = req.body;
+  // const response = await User.findOne({ _id : user_id });
+  console.log("hiiiiiii"+user_id);
+  const response = await User.updateOne({ _id : user_id }, {
+    $pull: {
+      saved_books: book_id
+    }
+  });
+
+  if (response.modifiedCount > 0)
+    {
+      return res.status(200).json({ message : "Book deleted from the list successfully"});
+    }
+    else
+    {
+      return res.status(400).json({ message : "Failed to delete book" });
     }
 });
 

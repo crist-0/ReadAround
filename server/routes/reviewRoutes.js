@@ -181,7 +181,39 @@ router.get("/:reviewid/comments",async (req, res) => {
 
     }
     catch(error){
+        console.error("Error while fetching comments for the review : ",error);
+        res.status(500).json({ message : "server error",error });
+    }
+})
 
+//fetch comments from backend
+router.get("/comments/:userId",async (req, res) => {
+    try{
+
+        const user_id = req.params.userId;
+
+        const response = await Comment.find({
+            user_id: user_id
+        });
+
+        if(!response){
+            return res.status(400).json({
+                message: "Comments not found"
+            })
+        }
+        else{
+            return res.status(200).json({
+                message: "Success",
+                data: response.map(  data => ({
+                    comment: data.content,
+                }))
+            })
+        }
+
+    }
+    catch(error){
+        console.error("Error while getting the review for the user : ",error);
+        res.status(500).json({ message : "server error",error });
     }
 })
 
