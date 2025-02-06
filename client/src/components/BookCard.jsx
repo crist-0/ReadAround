@@ -69,7 +69,7 @@ const BookCard = ({ book }) => {
   const handleRead = () => {
     navigate("/view-reviews", {
       state: {
-        book_id: book.id,
+        book_id: book.id || book._id,
         book_title: book.title
       },
     });

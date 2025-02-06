@@ -4,22 +4,20 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import BookCard from "../components/BookCard";
 import ReviewCard from "../components/ReviewCard";
 import Navbar from "../components/Navbar";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = "http://localhost:7000/api/feed";
-
 
 const FeedPage = () => {
   const [books, setBooks] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [bookPage, setBookPage] = useState(1);
-  const [reviewPage, setReviewPage] = useState(1);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [hasMoreBooks, setHasMoreBooks] = useState(true);
-  const [hasMoreReviews, setHasMoreReviews] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  
+
   const navigate = useNavigate();
 
   // Fetch books
@@ -37,29 +35,25 @@ const FeedPage = () => {
     }
   };
 
-  const handleRedirect = () => {
-    navigate("/explore")
-  }
-
-  // Fetch reviews
-  const fetchReviews = async () => {
+  // Handle search
+  const handleSearch = async (term) => {
+    setSearchTerm(term);
+    if (term.length < 2) {
+      setSearchResults([]);
+      return;
+    }
     try {
-      const res = await axios.get(`${API_URL}/reviews?page=${reviewPage}`);
-      if (res.data.reviews.length === 0) {
-        setHasMoreReviews(false);
-      } else {
-        setReviews((prev) => [...prev, ...res.data.reviews]);
-        setReviewPage(res.data.nextPage);
-      }
+      const res = await axios.get(`http://localhost:7000/api/books/search?title=${term}`);
+      setSearchResults(res.data.books);
     } catch (err) {
-      setError("Failed to load reviews");
+      setError("Failed to search books");
     }
   };
 
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        await Promise.all([fetchBooks(), fetchReviews()]);
+        await fetchBooks();
         setLoading(false);
       } catch (err) {
         setError("Something went wrong");
@@ -81,44 +75,52 @@ const FeedPage = () => {
       <Navbar />
       <h1 className="text-3xl font-bold text-center mb-5">Book Feed</h1>
       <div className="flex flex-col items-center pb-3">
-
-        <button className="text-xl text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center"
-                onClick={handleRedirect}>
-                  Explore by genre
+        <button
+          className="text-xl text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          onClick={() => navigate("/explore")}
+        >
+          Explore by genre
         </button>
       </div>
+
+      {/* Search Section */}
+      <div className="mb-5">
+        <input
+          type="text"
+          className="w-full p-3 bg-gray-600 rounded-lg text-black"
+          placeholder="Search for books..."
+          value={searchTerm}
+          onChange={(e) => handleSearch(e.target.value)}
+        />
+        {searchResults.length > 0 && (
+          <div className="bg-white text-black rounded-lg mt-2 p-2 max-h-60 overflow-y-auto shadow-lg">
+            {searchResults.map((book) => (
+              <div
+                key={book.id}
+                className="p-2 hover:bg-gray-200 cursor-pointer"
+                onClick={() => navigate(`/bookpage`, { state: { book } })}
+              >
+                {book.title}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         {/* Books Section */}
-          <h2 className="text-xl font-semibold mb-3 text-center">Books</h2>
-          <InfiniteScroll
-            dataLength={books.length}
-            next={fetchBooks}
-            hasMore={hasMoreBooks}
-            loader={<h4 className="text-center">Loading more books...</h4>}
-            className="space-y-4"
-          >
-            {console.log(books)}
-            {books.map((book) => (
-              <BookCard key={book.id} book={book} />
-            ))}
-          </InfiniteScroll>
-
-
-        {/* Reviews Section */}
-        {/* <div>
-          <h2 className="text-xl font-semibold mb-3">Reviews</h2>
-          <InfiniteScroll
-            dataLength={reviews.length}
-            next={fetchReviews}
-            hasMore={hasMoreReviews}
-            loader={<h4 className="text-center">Loading more reviews...</h4>}
-            className="space-y-4"
-          >
-            {reviews.map((review) => (
-              <ReviewCard key={review._id} review={review} />
-            ))}
-          </InfiniteScroll>
-        </div> */}
+        <h2 className="text-xl font-semibold mb-3 text-center">Books</h2>
+        <InfiniteScroll
+          dataLength={books.length}
+          next={fetchBooks}
+          hasMore={hasMoreBooks}
+          loader={<h4 className="text-center">Loading more books...</h4>}
+          className="space-y-4"
+        >
+          {books.map((book) => (
+            <BookCard key={book.id} book={book} />
+          ))}
+        </InfiniteScroll>
       </div>
     </div>
   );

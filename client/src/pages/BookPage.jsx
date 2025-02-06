@@ -1,24 +1,51 @@
-import React from "react";
+import React, {useState,useEffect} from "react";
 import BookCard from "../components/BookCard"; // Assuming BookCard is in the same directory
+import { useLocation } from "react-router-dom";
+import axios from "axios";
 
 const BookPage = () => {
-  // Hardcoded book details
-  const book = {
-    coverImage:
-      "https://cdn.penguin.co.in/wp-content/uploads/2024/05/9780143457534.jpg", // Public domain image of The Jungle Book cover
-    name: "The Jungle Book",
-    author: "Rudyard Kipling",
-    year: 1894,
-    genre: "Adventure, Children's Literature",
-    rating: 5,
-    description:
-      "The Jungle Book is a classic tale of adventure and survival in the jungles of India, featuring Mowgli, a young boy raised by wolves, and his encounters with characters like Baloo the bear, Bagheera the panther, and Shere Khan the tiger.",
-    reviews: [
-      { text: "A timeless masterpiece that captivates readers of all ages.", author: "Emily" },
-      { text: "The vivid descriptions make you feel like you're in the jungle.", author: "James" },
-      { text: "A must-read for anyone who loves adventure and storytelling.", author: "Sophia" },
-    ],
-  };;
+  const location = useLocation();
+  const book = location.state?.book;
+  const [reviews, setReviews] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [recommendedBooks, setRecommendedBooks] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [loadingRecs, setLoadingRecs] = useState(true);
+  const [errorReviews, setErrorReviews] = useState(null);
+  const [errorRecs, setErrorRecs] = useState(null);
+
+  console.log("book id = "+book.id);
+  // Fetch recommendations
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      try {
+        const response = await axios.post("http://127.0.0.1:8000/recs/", {
+          books: [book.id],
+        });
+        setRecommendations(response.data);
+
+        const bookRequests = Object.values(response.data.book_id).map((bookId) =>
+          axios.get(`http://127.0.0.1:7000/api/books/${bookId}`)
+        );
+        const bookResponses = await Promise.all(bookRequests);
+        const books = bookResponses.map((response) => response.data.data);
+        setRecommendedBooks(books);
+      } catch (error) {
+        setErrorRecs("Error fetching recommendations.");
+        console.error("Error fetching recommendations:", error);
+      } finally {
+        setLoadingRecs(false);
+      }
+    };
+
+    if (book?.id) {
+      fetchRecommendations();
+    }
+  }, [book?.id]);
+  
+  if (!book) {
+    return <p className="text-center text-gray-500">No book details available.</p>;
+  }
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen py-8">
@@ -27,41 +54,26 @@ const BookPage = () => {
           <BookCard book={book} />
         </div>
 
-        {/* Detailed Description Section */}
-        <div className="bg-gray-800 text-gray-100 rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-3xl font-bold mb-4">About the Book</h2>
-          <p className="text-gray-300 leading-relaxed">
-            {book.description
-              ? book.description
-              : "No detailed description available for this book."}
-          </p>
+      {/* Recommendations Section */}
+      <div className="bg-gray-800 text-gray-100 rounded-lg shadow-lg p-6">
+          <h2 className="text-3xl font-bold mb-4">Recommended Books</h2>
+          {loadingRecs ? (
+            <p className="text-gray-400">Loading recommendations...</p>
+          ) : errorRecs ? (
+            <p className="text-red-500">Error: {errorRecs}</p>
+          ) : recommendedBooks.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+              {recommendedBooks.map((recBook) => (
+                <BookCard key={recBook.id} book={recBook} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-400">No recommendations available.</p>
+          )}
         </div>
 
-        {/* Reviews Section */}
-        <div className="bg-gray-800 text-gray-100 rounded-lg shadow-lg p-6">
-          <h2 className="text-3xl font-bold mb-4">Reviews</h2>
-          <div>
-            {book.reviews && book.reviews.length > 0 ? (
-              <ul className="space-y-4">
-                {book.reviews.map((review, index) => (
-                  <li
-                    key={index}
-                    className="bg-gray-700 p-4 rounded-lg shadow-md"
-                  >
-                    <p className="text-gray-300 mb-2">{review.text}</p>
-                    <span className="text-gray-400 text-sm">
-                      - {review.author}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-400">No reviews available for this book.</p>
-            )}
-          </div>
-        </div>
       </div>
-    </div>
+      </div>
   );
 };
 

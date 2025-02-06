@@ -276,6 +276,9 @@ const Dashboard = () => {
     fetchReviews();
   }, [user_id]);
 
+
+  // Social 
+
   useEffect(() => {
     const fetchSocialData = async () => {
       try {
@@ -283,26 +286,40 @@ const Dashboard = () => {
           axios.get(`http://127.0.0.1:7000/api/social/${user_id}/followers`),
           axios.get(`http://127.0.0.1:7000/api/social/${user_id}/following`),
         ]);
-
-        const followerIds = followersRes.data.data.map(item => item.follower);
-        const followingIds = followingRes.data.data.map(item => item.following);
-
-        const userPromises = [...followerIds, ...followingIds].map(id =>
+    
+        const followerIds = followersRes.data.data.map((item) => item.follower);
+        const followingIds = followingRes.data.data.map((item) => item.following);
+    
+        const uniqueFollowerIds = [...new Set(followerIds)];
+        const uniqueFollowingIds = [...new Set(followingIds)];
+    
+        const uniqueUserIds = [...new Set([...uniqueFollowerIds, ...uniqueFollowingIds])];
+    
+        const userPromises = uniqueUserIds.map((id) =>
           axios.get(`http://127.0.0.1:7000/api/user/details?id=${id}`)
         );
         const users = await Promise.all(userPromises);
-        
+    
         const userMap = users.reduce((acc, res) => {
           acc[res.data.user.id] = res.data.user.username;
           return acc;
         }, {});
-
-        setFollowers(followerIds.map(id => ({ id, username: userMap[id] })));
-        setFollowing(followingIds.map(id => ({ id, username: userMap[id] })));
+    
+        setFollowers(filterUsers(uniqueFollowerIds, userMap));
+        setFollowing(filterUsers(uniqueFollowingIds, userMap));
       } catch (error) {
         console.error("Failed to fetch social data.", error);
       }
     };
+    
+    const filterUsers = (userIds, userMap) => {
+      return userIds.map((id) => ({
+        id,
+        username: userMap[id],
+      }));
+    };
+    
+    
     fetchSocialData();
   }, [user_id]);
 
@@ -403,6 +420,20 @@ const handleDeleteBook = async (bookId) => {
   }
 };
 
+const handleUsernameClick = async (userId) => {
+  try {
+    const response = await axios.get(`http://127.0.0.1:7000/api/user/details?id=${userId}`);
+    const userData = response.data.user;
+    
+    if (userData) {
+      navigate("/view-user", { state: { user_data: userData } });
+    }
+  } catch (error) {
+    console.error("Failed to fetch user data.", error);
+  }
+};
+
+
   if (!dashboardData) {
     return <div className="text-center text-gray-500 mt-10">Loading user data...</div>;
   }
@@ -425,36 +456,44 @@ const handleDeleteBook = async (bookId) => {
           </div>
         </div>
 
-        {showPopup && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-            <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-80 max-w-md">
-              <h2 className="text-xl text-white mb-4 text-center">
-                {showPopup === "followers" ? "Followers" : "Following"}
-              </h2>
-              <ul className="space-y-3 max-h-60 overflow-y-auto">
-                {(showPopup === "followers" ? followers : following).map((user) => (
-                  <li key={user.id} className="flex justify-between items-center text-white bg-gray-700 p-2 rounded-lg">
-                    <span className="text-base">{user.username}</span>
-                    {showPopup === "following" && (
-                      <button
-                        onClick={() => handleFollowToggle(user.id, true)}
-                        className="bg-red-500 hover:bg-red-600 text-white text-base px-3 py-1 rounded-lg"
-                      >
-                        Unfollow
-                      </button>
-                    )}
-                  </li>
-                ))}
-              </ul>
-              <button 
-                onClick={() => setShowPopup(null)} 
-                className="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg text-sm"
+  {showPopup && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-80 max-w-md">
+      <h2 className="text-xl text-white mb-4 text-center">
+        {showPopup === "followers" ? "Followers" : "Following"}
+      </h2>
+      <ul className="space-y-3 max-h-60 overflow-y-auto">
+        {(showPopup === "followers" ? followers : following).map((user) => (
+          <li 
+            key={user.id} 
+            className="flex justify-between items-center text-white bg-gray-700 p-2 rounded-lg"
+          >
+            <span 
+              className="text-base cursor-pointer hover:underline" 
+              onClick={() => handleUsernameClick(user.id)}
+            >
+              {user.username}
+            </span>
+            {showPopup === "following" && (
+              <button
+                onClick={() => handleFollowToggle(user.id, true)}
+                className="bg-red-500 hover:bg-red-600 text-white text-base px-3 py-1 rounded-lg"
               >
-                Close
+                Unfollow
               </button>
-            </div>
-          </div>
-        )}
+            )}
+          </li>
+        ))}
+      </ul>
+      <button 
+        onClick={() => setShowPopup(null)} 
+        className="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white py-2 rounded-lg text-sm"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
 
     <div className="mb-6">
         <h2 className="text-xl font-semibold text-white mb-4">Saved Books</h2>

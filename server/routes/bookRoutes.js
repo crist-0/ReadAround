@@ -35,6 +35,40 @@ router.post("/get", async (req, res) => {
 
 });
 
+router.get("/search", async (req, res) => {
+    const { title } = req.query;
+    if (!title) {
+      return res.status(400).json({ message: "Title is required for search" });
+    }
+  
+    try {
+      const response = await Book.find({ title: new RegExp(title, "i") }); // Case-insensitive title search
+  
+      if (!response.length) {
+        return res.status(404).json({ message: "No books found with the given title" });
+      }
+  
+      return res.status(200).json({
+        message: "Success",
+        books: response.map((book) => ({
+          id: book._id,
+          title: book.title,
+          genre: book.genre,
+          cover_image: book.cover_image,
+          publication_date: book.publication_date,
+          number_of_reviews: book.number_of_reviews,
+          average_rating: book.average_rating,
+          author: book.author,
+        })),
+      });
+    } catch (error) {
+      console.error("Search error:", error);
+      return res.status(500).json({ message: "Server error" });
+    }
+  });
+  
+  
+
 // return a book specified by the id.
 router.get("/:id",async (req,res) => {
     const book_id = req.params.id;
