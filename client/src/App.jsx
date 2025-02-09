@@ -20,7 +20,7 @@ import ReviewDisplay from './pages/ReviewDisplay';
 import UserProfilePage from './pages/UserProfilePage';
 import FeedPage from './pages/FeedPage';
 
-const App = () => {
+const App = () => {  
   return (
     <Router>
       <div className="bg-custom h-screen">

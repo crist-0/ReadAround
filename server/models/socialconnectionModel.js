@@ -9,4 +9,6 @@ const socialConnectionSchema = new mongoose.Schema({
   id: true 
 });
 
+socialConnectionSchema.index({ follower_id: 1, followed_id: 1 }, { unique: true });
+
 module.exports = mongoose.model("SocialConnection", socialConnectionSchema);

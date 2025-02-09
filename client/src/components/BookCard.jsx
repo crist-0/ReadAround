@@ -3,13 +3,24 @@ import { useNavigate } from "react-router-dom";
 
 import axios from 'axios';
 
+import { CohereClientV2 } from 'cohere-ai';
+
+const cohere_api_key = import.meta.env.VITE_API_KEY;
+
+const cohere = new CohereClientV2({
+  token: cohere_api_key,
+});
+
+
+
 const BookCard = ({ book }) => {
 
     const [bookCover, setBookCover] = useState();
+    const [generatedReview, setGeneratedReview] = useState("");
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const q = `?book_title=${book.title}s&author_name=${book.author}`;
     const formattedQuery = q.replace(/(\w)([A-Z])/g, '$1+$2').toLowerCase();
-
 
     const fetchCover = async () => {
       try{
@@ -74,6 +85,43 @@ const BookCard = ({ book }) => {
       },
     });
   }
+
+  const handleGenerateReview = async () => {
+    setGeneratedReview("");
+    setIsGenerating(true);
+
+    try {
+      const response = await cohere.chat({
+        model: "command-r-plus-08-2024",
+        messages: [
+          {
+            role: "user",
+            content: `Write a brief review for the book titled "${book.title}" by ${book.author}.`,
+          },
+        ],
+        endpoint: "https://api.cohere.com/v2/chat",
+      });
+
+      const fullReview =
+        response?.message?.content[0]?.text || "No review generated.";
+      setIsGenerating(false);
+
+      // Typing effect: Display the review character by character
+      let currentIndex = 0;
+      const interval = setInterval(() => {
+        setGeneratedReview((prev) => prev + fullReview[currentIndex]);
+        currentIndex++;
+        if (currentIndex >= fullReview.length) {
+          clearInterval(interval);
+        }
+      }, 30); // Adjust interval speed (30ms for faster typing effect)
+    } catch (error) {
+      console.error("Error generating review:", error);
+      console.log(error);
+      setGeneratedReview("Failed to generate review. Please try again.");
+      setIsGenerating(false);
+    }
+  };
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 p-6">
@@ -148,7 +196,29 @@ const BookCard = ({ book }) => {
                 Add to Reading List
               </button>
             </div>
+           
+{/* Generate Review Button */}
+<div className="mt-6">
+              <button
+                className="w-full bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700"
+                onClick={handleGenerateReview}
+                disabled={isGenerating}
+              >
+                {isGenerating ? "Generating..." : "Generate Review"}
+              </button>
+            </div>
+
+            {/* Generated Review with Typing Effect */}
+            {generatedReview && (
+              <div className="mt-6 p-4 bg-gray-200 dark:bg-gray-700 rounded-lg">
+                <h3 className="text-lg font-bold mb-2">Generated Review:</h3>
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                  {generatedReview}
+                </p>
+              </div>
+            )}
           </div>
+
         </div>
       </div>
     </div>

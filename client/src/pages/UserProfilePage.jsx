@@ -50,29 +50,30 @@ const UserProfilePage = () => {
       }
     };
 
-    const checkFollowingStatus = async () => {
-      try {
-        const response = await axios.post(
-          "http://127.0.0.1:7000/api/social/follow",
-          {
-            follower: log_id,
-            following: user_data.id,
-          }
-        );
-
-        if (response.data.message === "Already following") {
-          setIsFollowing(true);
-        }
-      } catch (error) {
-        console.error("Error checking follow status:", error);
-      }
-    };
 
     fetchBookDetails();
     fetchReviewDetails();
     checkFollowingStatus();
   }, [user_data.saved_books, user_data.id, log_id]);
 
+  const checkFollowingStatus = async () => {
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:7000/api/social/check",
+        {
+          follower: log_id,
+          following: user_data.id,
+        }
+      );
+      console.log(response.data.message);
+      if (response.data.message == "Already following") {
+        setIsFollowing(true);
+      }
+    } catch (error) {
+      console.error("Error checking follow status:", error);
+    }
+  };
+  
   const handleFollow = async () => {
     try {
       if (!isFollowing) {
@@ -83,10 +84,7 @@ const UserProfilePage = () => {
         setIsFollowing(true);
       } else {
         await axios.delete("http://127.0.0.1:7000/api/social/unfollow", {
-          data: {
-            follower: log_id,
-            followed: user_data.id,
-          },
+          data: { follower: log_id, followed: user_data.id },
         });
         setIsFollowing(false);
       }
@@ -94,6 +92,7 @@ const UserProfilePage = () => {
       console.error("Error updating follow status:", error);
     }
   };
+  
 
   const handleRedirect = () => {
     navigate("/");
