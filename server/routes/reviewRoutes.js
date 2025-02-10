@@ -205,6 +205,7 @@ router.get("/comments/:userId",async (req, res) => {
             return res.status(200).json({
                 message: "Success",
                 data: response.map(  data => ({
+                    id: data._id,
                     comment: data.content,
                 }))
             })
@@ -268,6 +269,7 @@ router.delete("/:commentId/comment",async (req, res) => {
             }
         else
             {
+                console.log(response);
                 res.status(500).json({
                     message: "Could not delete the comment"
                 });
